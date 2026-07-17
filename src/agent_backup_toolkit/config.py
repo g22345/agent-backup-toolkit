@@ -6,6 +6,7 @@ import os
 import re
 from pathlib import Path
 from typing import Annotated, Literal, TypeAlias
+from urllib.parse import urlsplit
 
 import yaml
 from platformdirs import user_config_path, user_state_path
@@ -173,6 +174,30 @@ class S3Destination(DestinationBase):
         if not cleaned or ".." in cleaned.split("/"):
             raise ValueError("prefix must be a safe non-empty object-key prefix")
         return cleaned
+
+    @field_validator("region")
+    @classmethod
+    def validate_region(cls, value: str | None) -> str | None:
+        if value is not None and not re.fullmatch(r"[A-Za-z0-9-]{1,64}", value):
+            raise ValueError("region contains unsupported characters")
+        return value
+
+    @field_validator("endpoint_url")
+    @classmethod
+    def validate_endpoint_url(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        parsed = urlsplit(value)
+        if (
+            parsed.scheme not in {"http", "https"}
+            or not parsed.hostname
+            or parsed.username
+            or parsed.password
+            or parsed.query
+            or parsed.fragment
+        ):
+            raise ValueError("endpoint_url must not contain credentials, query, or fragment")
+        return value.rstrip("/")
 
 
 DestinationConfig: TypeAlias = Annotated[

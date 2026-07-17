@@ -79,7 +79,14 @@ def test_status_ignores_incomplete_receipt(tmp_path: Path) -> None:
 
 
 def test_unimplemented_workflows_fail_instead_of_claiming_success() -> None:
-    for command in ("backup", "verify", "restore"):
+    for command in ("verify", "restore"):
         result = runner.invoke(app, [command])
         assert result.exit_code == 2
         assert "not available" in result.stderr
+
+
+def test_backup_fails_when_config_is_missing() -> None:
+    result = runner.invoke(app, ["backup", "--config", "/missing/config.yaml"])
+
+    assert result.exit_code == 2
+    assert "Configuration file not found" in result.stderr

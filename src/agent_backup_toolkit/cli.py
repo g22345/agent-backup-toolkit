@@ -20,6 +20,7 @@ from agent_backup_toolkit.config import (
     write_starter_config,
 )
 from agent_backup_toolkit.errors import ConfigError, ToolkitError
+from agent_backup_toolkit.orchestrator import destination_from_config, run_backup
 from agent_backup_toolkit.state import latest_success_receipt
 
 app = typer.Typer(
@@ -104,6 +105,7 @@ def doctor(
             and importlib.util.find_spec("boto3") is None
         ):
             raise ConfigError("S3 destination requires the optional 'boto3' dependency.")
+        destination_from_config(parsed).preflight()
     except ToolkitError as exc:
         _fail(exc)
     typer.echo("Doctor checks passed. No backup data was uploaded.")
@@ -138,10 +140,21 @@ def _foundation_only(command: str) -> NoReturn:
 
 
 @app.command()
-def backup() -> None:
+def backup(
+    config: Annotated[
+        Path | None,
+        typer.Option("--config", help="Configuration to use."),
+    ] = None,
+) -> None:
     """Create and verify a new encrypted backup."""
 
-    _foundation_only("backup")
+    target = (config or default_config_path()).expanduser()
+    try:
+        parsed = load_config(target)
+        receipt = run_backup(parsed)
+    except ToolkitError as exc:
+        _fail(exc)
+    typer.echo(f"Backup verified: {receipt.backup_id}")
 
 
 @app.command()
