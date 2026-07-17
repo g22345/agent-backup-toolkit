@@ -17,7 +17,7 @@ and is not guaranteed.
 
 | Criterion | Current evidence | Status |
 | --- | --- | --- |
-| Public open-source repository | Apache-2.0 license and public-ready tree | Not public yet |
+| Public open-source repository | [g22345/agent-backup-toolkit](https://github.com/g22345/agent-backup-toolkit), Apache-2.0 | Public |
 | Core/primary maintainer | Intended maintainer recorded in design spec and Git history | Locally evidenced |
 | Active maintenance | Dated commits, changelog, roadmap, CI/test plan | Locally evidenced |
 | Useful project scope | Reproducible encrypted backup/verify/restore CLI for agent workspaces | Implemented locally |

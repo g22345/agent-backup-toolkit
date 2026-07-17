@@ -56,7 +56,7 @@ Prerequisites: Python 3.11+, `age`, and `age-keygen`. GitHub destinations also
 need `gh`; S3 destinations need the `s3` optional dependency.
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/g22345/agent-backup-toolkit.git
 cd agent-backup-toolkit
 uv venv --python 3.12 .venv
 uv pip install --python .venv/bin/python -e '.[dev,s3]'
@@ -136,4 +136,3 @@ reliability, external adoption, or guaranteed support. Current milestones are in
 [ADOPTERS.md](ADOPTERS.md).
 
 Licensed under Apache-2.0.
-
