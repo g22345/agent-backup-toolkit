@@ -1,0 +1,19 @@
+# Conservative Codex-first source preset.
+# Authentication, sessions, logs, caches, browser profiles, and runtime databases
+# are intentionally excluded. Copy only the entries you understand into config.yaml.
+sources:
+  - type: directory
+    name: codex-skills
+    path: ~/.codex/skills
+    include:
+      - "**/*.md"
+      - "**/*.yaml"
+      - "**/*.yml"
+    exclude:
+      - "**/.git/**"
+      - "**/__pycache__/**"
+    limits:
+      max_files: 10000
+      max_file_bytes: 10485760
+      max_total_bytes: 536870912
+
