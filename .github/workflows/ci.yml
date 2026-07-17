@@ -26,7 +26,7 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python }}
-      - uses: astral-sh/setup-uv@v8.1.0
+      - uses: astral-sh/setup-uv@v8.3.2
       - run: python -m venv .venv
       - run: uv pip install --python .venv/bin/python -e '.[dev,s3]'
       - run: .venv/bin/pytest -q
@@ -41,7 +41,7 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
-      - uses: astral-sh/setup-uv@v8.1.0
+      - uses: astral-sh/setup-uv@v8.3.2
       - run: python -m venv .venv
       - run: uv pip install --python .venv/bin/python -e '.[dev,s3]'
       - run: uv pip install --python .venv/bin/python --upgrade pip
@@ -59,7 +59,7 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
-      - uses: astral-sh/setup-uv@v8.1.0
+      - uses: astral-sh/setup-uv@v8.3.2
       - run: sudo apt-get update && sudo apt-get install --yes age
       - run: python -m venv .venv
       - run: uv pip install --python .venv/bin/python -e .
