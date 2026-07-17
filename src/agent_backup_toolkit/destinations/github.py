@@ -13,7 +13,7 @@ from typing import Literal
 from agent_backup_toolkit.config import GitHubDestination
 from agent_backup_toolkit.destinations.base import final_filename, prepared_filename
 from agent_backup_toolkit.destinations.local import _copy_new, _safe_backup_id
-from agent_backup_toolkit.errors import DestinationError
+from agent_backup_toolkit.errors import DestinationError, DestinationIntegrityError
 
 
 class GitHubDestinationAdapter:
@@ -102,7 +102,14 @@ class GitHubDestinationAdapter:
             ]
         )
 
-    def _download(self, backup_id: str, filename: str, output_path: Path) -> None:
+    def _download(
+        self,
+        backup_id: str,
+        filename: str,
+        output_path: Path,
+        *,
+        expected_bytes: int | None = None,
+    ) -> None:
         with tempfile.TemporaryDirectory(prefix="agent-backup-github-") as temporary:
             directory = Path(temporary)
             self._run(
@@ -121,12 +128,21 @@ class GitHubDestinationAdapter:
             downloaded = directory / filename
             if downloaded.is_symlink() or not downloaded.is_file():
                 raise DestinationError("GitHub read-back did not return the expected object.")
+            if expected_bytes is not None and downloaded.stat().st_size != expected_bytes:
+                raise DestinationIntegrityError("GitHub artifact size does not match its receipt.")
             _copy_new(downloaded, output_path)
 
-    def read_artifact(self, backup_id: str, filename: str, output_path: Path) -> None:
+    def read_artifact(
+        self,
+        backup_id: str,
+        filename: str,
+        output_path: Path,
+        *,
+        expected_bytes: int,
+    ) -> None:
         if filename != f"{_safe_backup_id(backup_id)}.tar.gz.age":
             raise DestinationError("Destination received an invalid artifact filename.")
-        self._download(backup_id, filename, output_path)
+        self._download(backup_id, filename, output_path, expected_bytes=expected_bytes)
 
     def publish_final(self, backup_id: str, content: bytes) -> None:
         filename = final_filename(backup_id)

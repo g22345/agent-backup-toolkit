@@ -25,7 +25,12 @@ def exercise_contract(adapter: Any, tmp_path: Path) -> None:
     adapter.preflight()
     adapter.publish_prepared(BACKUP_ID, b'{"outcome":"prepared"}\n')
     adapter.publish_artifact(BACKUP_ID, ARTIFACT, artifact)
-    adapter.read_artifact(BACKUP_ID, ARTIFACT, readback)
+    adapter.read_artifact(
+        BACKUP_ID,
+        ARTIFACT,
+        readback,
+        expected_bytes=artifact.stat().st_size,
+    )
     adapter.publish_final(BACKUP_ID, b'{"outcome":"success"}\n')
 
     assert readback.read_bytes() == artifact.read_bytes()
@@ -62,9 +67,10 @@ class FakeS3Client:
     def head_bucket(self, **_kwargs: object) -> None:
         return None
 
-    def head_object(self, *, Bucket: str, Key: str) -> None:
+    def head_object(self, *, Bucket: str, Key: str) -> dict[str, int]:
         if (Bucket, Key) not in self.objects:
             raise MissingObject
+        return {"ContentLength": len(self.objects[(Bucket, Key)])}
 
     def put_object(self, *, Bucket: str, Key: str, Body: object, **_kwargs: object) -> None:
         if hasattr(Body, "read"):

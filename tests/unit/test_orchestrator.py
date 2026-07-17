@@ -47,8 +47,20 @@ def test_backup_records_success_only_after_readback(
 
 
 class TamperingLocalAdapter(LocalDestinationAdapter):
-    def read_artifact(self, backup_id: str, filename: str, output_path: Path) -> None:
-        super().read_artifact(backup_id, filename, output_path)
+    def read_artifact(
+        self,
+        backup_id: str,
+        filename: str,
+        output_path: Path,
+        *,
+        expected_bytes: int,
+    ) -> None:
+        super().read_artifact(
+            backup_id,
+            filename,
+            output_path,
+            expected_bytes=expected_bytes,
+        )
         with output_path.open("ab") as handle:
             handle.write(b"tampered")
 

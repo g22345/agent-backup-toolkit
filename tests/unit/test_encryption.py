@@ -77,3 +77,12 @@ def test_identity_permissions_must_be_private(tmp_path: Path) -> None:
 
     with pytest.raises(CryptoError, match="permissions"):
         encryption.decrypt_file(encrypted, output, identity)
+
+
+def test_missing_identity_is_rejected_without_running_age(tmp_path: Path) -> None:
+    encrypted = tmp_path / "archive.age"
+    output = tmp_path / "plain.tar.gz"
+    encrypted.write_bytes(encryption.AGE_HEADER + b"\npayload")
+
+    with pytest.raises(CryptoError, match="identity file could not be inspected"):
+        encryption.decrypt_file(encrypted, output, tmp_path / "missing-identity.txt")

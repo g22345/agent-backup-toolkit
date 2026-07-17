@@ -28,7 +28,14 @@ class DestinationAdapter(Protocol):
 
     def publish_artifact(self, backup_id: str, filename: str, source_path: Path) -> None: ...
 
-    def read_artifact(self, backup_id: str, filename: str, output_path: Path) -> None: ...
+    def read_artifact(
+        self,
+        backup_id: str,
+        filename: str,
+        output_path: Path,
+        *,
+        expected_bytes: int,
+    ) -> None: ...
 
     def publish_final(self, backup_id: str, content: bytes) -> None: ...
 

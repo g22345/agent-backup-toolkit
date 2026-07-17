@@ -58,6 +58,10 @@ class DestinationError(ToolkitError):
     exit_code = ExitCode.DESTINATION
 
 
+class DestinationIntegrityError(DestinationError):
+    """Destination returned bytes that contradict the expected immutable object."""
+
+
 class VerifyError(ToolkitError):
     """Backup verification failed."""
 

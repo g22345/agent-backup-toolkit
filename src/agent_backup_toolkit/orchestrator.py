@@ -201,7 +201,7 @@ def run_backup(
             prepared = PreparedReceipt(
                 backup_id=backup_id,
                 started_at=started_at,
-                source_names=tuple(sorted(source.name for source in config.sources)),
+                source_names=tuple(sorted({file.logical_source for file in files})),
                 file_count=len(files),
                 total_bytes=sum(file.size_bytes for file in files),
                 destination_type=adapter.destination_type,
@@ -216,7 +216,12 @@ def run_backup(
             stage = "artifact_published"
 
             readback_path = temporary_root / f"readback-{artifact_filename}"
-            adapter.read_artifact(backup_id, artifact_filename, readback_path)
+            adapter.read_artifact(
+                backup_id,
+                artifact_filename,
+                readback_path,
+                expected_bytes=artifact_bytes,
+            )
             try:
                 readback_bytes = readback_path.stat().st_size
                 readback_digest = sha256_file(readback_path)

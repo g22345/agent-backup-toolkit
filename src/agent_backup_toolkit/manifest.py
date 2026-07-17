@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 from pathlib import Path
 from typing import Literal
 
@@ -41,6 +42,13 @@ class ManifestEntry(BaseModel):
     @classmethod
     def validate_relative_path(cls, value: str) -> str:
         safe_relative_path(value)
+        return value
+
+    @field_validator("logical_source")
+    @classmethod
+    def validate_logical_source(cls, value: str) -> str:
+        if not re.fullmatch(r"[a-z][a-z0-9_-]{0,63}", value):
+            raise ValueError("logical_source is invalid")
         return value
 
     @field_validator("mode")

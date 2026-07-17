@@ -78,11 +78,11 @@ def test_status_ignores_incomplete_receipt(tmp_path: Path) -> None:
     assert "No fully verified backup" in result.stdout
 
 
-def test_unimplemented_workflows_fail_instead_of_claiming_success() -> None:
+def test_verify_and_restore_require_explicit_arguments() -> None:
     for command in ("verify", "restore"):
         result = runner.invoke(app, [command])
         assert result.exit_code == 2
-        assert "not available" in result.stderr
+        assert "Missing argument" in result.stderr
 
 
 def test_backup_fails_when_config_is_missing() -> None:

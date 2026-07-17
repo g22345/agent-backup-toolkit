@@ -11,7 +11,7 @@ from typing import Literal
 
 from agent_backup_toolkit.config import LocalDestination
 from agent_backup_toolkit.destinations.base import final_filename, prepared_filename
-from agent_backup_toolkit.errors import DestinationError
+from agent_backup_toolkit.errors import DestinationError, DestinationIntegrityError
 
 
 def _safe_backup_id(backup_id: str) -> str:
@@ -130,12 +130,26 @@ class LocalDestinationAdapter:
             raise DestinationError("Destination received an invalid artifact filename.")
         _publish_immutable_from_path(source_path, self._backup_root(backup_id) / filename)
 
-    def read_artifact(self, backup_id: str, filename: str, output_path: Path) -> None:
+    def read_artifact(
+        self,
+        backup_id: str,
+        filename: str,
+        output_path: Path,
+        *,
+        expected_bytes: int,
+    ) -> None:
         if filename != f"{_safe_backup_id(backup_id)}.tar.gz.age":
             raise DestinationError("Destination received an invalid artifact filename.")
         source = self._backup_root(backup_id) / filename
         if source.is_symlink() or not source.is_file():
             raise DestinationError("Encrypted artifact is missing or unsafe.")
+        try:
+            if source.stat().st_size != expected_bytes:
+                raise DestinationIntegrityError(
+                    "Encrypted artifact size does not match its receipt."
+                )
+        except OSError as exc:
+            raise DestinationError("Encrypted artifact metadata could not be read.") from exc
         _copy_new(source, output_path)
 
     def publish_final(self, backup_id: str, content: bytes) -> None:

@@ -21,7 +21,9 @@ from agent_backup_toolkit.config import (
 )
 from agent_backup_toolkit.errors import ConfigError, ToolkitError
 from agent_backup_toolkit.orchestrator import destination_from_config, run_backup
+from agent_backup_toolkit.restore import restore_backup
 from agent_backup_toolkit.state import latest_success_receipt
+from agent_backup_toolkit.verify import verify_backup
 
 app = typer.Typer(
     add_completion=False,
@@ -135,10 +137,6 @@ def status(
     typer.echo(f"Completed: {completed_at}")
 
 
-def _foundation_only(command: str) -> NoReturn:
-    _fail(ConfigError(f"'{command}' is not available until the backup workflow is installed."))
-
-
 @app.command()
 def backup(
     config: Annotated[
@@ -158,17 +156,67 @@ def backup(
 
 
 @app.command()
-def verify() -> None:
+def verify(
+    backup_id: Annotated[str, typer.Argument(help="Backup identifier to verify.")],
+    identity: Annotated[Path, typer.Option("--identity", help="Private age identity file.")],
+    config: Annotated[
+        Path | None,
+        typer.Option("--config", help="Configuration to use."),
+    ] = None,
+) -> None:
     """Verify an encrypted backup without restoring it."""
 
-    _foundation_only("verify")
+    target = (config or default_config_path()).expanduser()
+    try:
+        parsed = load_config(target)
+        summary = verify_backup(parsed, backup_id, identity.expanduser())
+    except ToolkitError as exc:
+        _fail(exc)
+    typer.echo(f"Backup verified: {summary.backup_id}")
+    typer.echo(f"Files: {summary.file_count}; bytes: {summary.total_bytes}")
 
 
 @app.command()
-def restore() -> None:
+def restore(
+    backup_id: Annotated[str, typer.Argument(help="Backup identifier to restore.")],
+    identity: Annotated[Path, typer.Option("--identity", help="Private age identity file.")],
+    target: Annotated[Path, typer.Option("--target", help="Explicit restore target directory.")],
+    apply: Annotated[bool, typer.Option("--apply", help="Write previewed files.")] = False,
+    overwrite: Annotated[
+        bool,
+        typer.Option("--overwrite", help="Replace collisions after encrypted rollback."),
+    ] = False,
+    config: Annotated[
+        Path | None,
+        typer.Option("--config", help="Configuration to use."),
+    ] = None,
+) -> None:
     """Preview or apply a verified restore."""
 
-    _foundation_only("restore")
+    config_path = (config or default_config_path()).expanduser()
+    try:
+        parsed = load_config(config_path)
+        result = restore_backup(
+            parsed,
+            backup_id,
+            identity.expanduser(),
+            target.expanduser(),
+            apply=apply,
+            overwrite=overwrite,
+        )
+    except ToolkitError as exc:
+        _fail(exc)
+    preview = result.preview
+    typer.echo(
+        f"Preview: {len(preview.additions)} addition(s), "
+        f"{len(preview.collisions)} collision(s), {len(preview.rejections)} rejection(s)."
+    )
+    if result.applied:
+        typer.echo("Restore applied. No target files were deleted.")
+        if result.rollback_path is not None:
+            typer.echo(f"Encrypted rollback: {result.rollback_path}")
+    else:
+        typer.echo("Preview only; no target files were written.")
 
 
 def run() -> None:

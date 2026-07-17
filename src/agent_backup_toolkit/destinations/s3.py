@@ -9,7 +9,7 @@ from typing import Any, Literal
 from agent_backup_toolkit.config import S3Destination
 from agent_backup_toolkit.destinations.base import final_filename, prepared_filename
 from agent_backup_toolkit.destinations.local import _safe_backup_id
-from agent_backup_toolkit.errors import DestinationError
+from agent_backup_toolkit.errors import DestinationError, DestinationIntegrityError
 
 
 class S3DestinationAdapter:
@@ -105,11 +105,21 @@ class S3DestinationAdapter:
                 "S3 artifact upload failed; provider details were withheld for safety."
             ) from exc
 
-    def read_artifact(self, backup_id: str, filename: str, output_path: Path) -> None:
+    def read_artifact(
+        self,
+        backup_id: str,
+        filename: str,
+        output_path: Path,
+        *,
+        expected_bytes: int,
+    ) -> None:
         if output_path.exists():
             raise DestinationError("Read-back output already exists; refusing to replace it.")
         output_path.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
         key = self._key(backup_id, filename)
+        metadata = self._call("head_object", Bucket=self.bucket, Key=key)
+        if metadata.get("ContentLength") != expected_bytes:
+            raise DestinationIntegrityError("S3 artifact size does not match its receipt.")
         try:
             self.client.download_file(self.bucket, key, str(output_path))
             output_path.chmod(0o600)
@@ -119,6 +129,10 @@ class S3DestinationAdapter:
             ) from exc
         if output_path.is_symlink() or not output_path.is_file():
             raise DestinationError("S3 artifact read-back did not create a safe file.")
+        if output_path.stat().st_size != expected_bytes:
+            raise DestinationIntegrityError(
+                "S3 artifact read-back size does not match its receipt."
+            )
 
     def publish_final(self, backup_id: str, content: bytes) -> None:
         key = self._key(backup_id, final_filename(backup_id))
