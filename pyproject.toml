@@ -8,8 +8,8 @@ version = "0.1.0a0"
 description = "Security-first encrypted backups for local AI-agent workspaces"
 readme = "README.md"
 requires-python = ">=3.11"
-license = { text = "Apache-2.0" }
-authors = [{ name = "Matthew Lam" }]
+license = "Apache-2.0"
+authors = [{ name = "g22345" }]
 keywords = ["backup", "codex", "ai-agents", "disaster-recovery", "age-encryption"]
 classifiers = [
   "Development Status :: 3 - Alpha",
@@ -36,7 +36,7 @@ dev = [
   "build>=1.2,<2",
   "mypy>=1.10,<2",
   "pip-audit>=2.7,<3",
-  "pytest>=8.2,<9",
+  "pytest>=9.0.3,<10",
   "pytest-cov>=5,<7",
   "ruff>=0.5,<1",
   "types-PyYAML>=6.0,<7",
@@ -75,4 +75,3 @@ python_version = "3.11"
 strict = true
 packages = ["agent_backup_toolkit"]
 mypy_path = "src"
-

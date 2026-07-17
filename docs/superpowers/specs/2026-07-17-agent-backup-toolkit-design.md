@@ -279,7 +279,7 @@ The public README must not claim adoption, security certification, compatibility
 ## 16. Release and adoption plan
 
 1. Complete a local security review and secret scan before any remote is created.
-2. Publish `v0.1.0` as an alpha release and PyPI package only after Matthew approves the exact public tree.
+2. Publish `v0.1.0` as an alpha release and PyPI package only after the maintainer approves the exact public tree.
 3. Run a real non-sensitive backup and restore drill and publish a reproducible demo using synthetic data.
 4. Invite at least three genuine external testers across macOS and Linux.
 5. Collect real feedback through GitHub issues; never manufacture activity, users, testimonials, or metrics.
@@ -302,7 +302,7 @@ The application-readiness document tracks:
 - a concrete, non-speculative API-credit use case;
 - the exact metrics and facts used in each application answer.
 
-The OpenAI Organization ID and personal application data remain outside the repository. The application is shown to Matthew in full and requires separate approval before submission.
+The OpenAI Organization ID and personal application data remain outside the repository. The application is shown to the maintainer in full and requires separate approval before submission.
 
 ## 18. Non-goals for version 0.1
 
@@ -331,7 +331,7 @@ The OpenAI Organization ID and personal application data remain outside the repo
 Implementation may start when:
 
 - this design has no unresolved placeholders or contradictory requirements;
-- Matthew approves the written spec;
+- the maintainer approves the written spec;
 - the implementation plan maps every version 0.1 requirement to files and tests;
 - no private source file, snapshot, receipt, secret, or Git history has entered this repository.
 
@@ -341,4 +341,4 @@ Public release may start only when:
 - the local end-to-end restore drill passes;
 - secret and provenance reviews report no private material;
 - packaging and clean-machine installation are verified;
-- Matthew reviews and explicitly approves the exact tree, repository name, license, description, and publish action.
+- the maintainer reviews and explicitly approves the exact tree, repository name, license, description, and publish action.

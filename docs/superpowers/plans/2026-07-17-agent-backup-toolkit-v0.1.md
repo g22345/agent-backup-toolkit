@@ -188,4 +188,4 @@
 - All automated checks pass on the local machine for available dependencies.
 - Unsupported external checks are reported as unverified rather than passed.
 - The working tree contains no private source history, snapshots, receipts, credentials, customer data, or operator-specific paths.
-- No GitHub remote, public repository, PyPI package, release, application, or profile change occurs before Matthew reviews and explicitly approves the exact public tree and action.
+- No GitHub remote, public repository, PyPI package, release, application, or profile change occurs before the maintainer reviews and explicitly approves the exact public tree and action.

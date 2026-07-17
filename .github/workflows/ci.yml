@@ -1,0 +1,75 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: ${{ matrix.os }} / Python ${{ matrix.python }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        python: ["3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python }}
+      - uses: astral-sh/setup-uv@v8.1.0
+      - run: python -m venv .venv
+      - run: uv pip install --python .venv/bin/python -e '.[dev,s3]'
+      - run: .venv/bin/pytest -q
+      - run: .venv/bin/ruff check .
+      - run: .venv/bin/ruff format --check .
+      - run: .venv/bin/mypy src
+
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - uses: astral-sh/setup-uv@v8.1.0
+      - run: python -m venv .venv
+      - run: uv pip install --python .venv/bin/python -e '.[dev,s3]'
+      - run: .venv/bin/python scripts/audit_public_tree.py --repo .
+      - run: .venv/bin/python -m build
+      - run: python -m venv /tmp/agent-backup-wheel
+      - run: /tmp/agent-backup-wheel/bin/pip install dist/*.whl
+      - run: /tmp/agent-backup-wheel/bin/agent-backup --help
+      - run: .venv/bin/pip-audit
+
+  synthetic-drill:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - uses: astral-sh/setup-uv@v8.1.0
+      - run: sudo apt-get update && sudo apt-get install --yes age
+      - run: python -m venv .venv
+      - run: uv pip install --python .venv/bin/python -e .
+      - run: .venv/bin/python scripts/demo_local.py
+
+  dependency-review:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/dependency-review-action@v4
+
