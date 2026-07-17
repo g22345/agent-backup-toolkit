@@ -44,6 +44,7 @@ jobs:
       - uses: astral-sh/setup-uv@v8.1.0
       - run: python -m venv .venv
       - run: uv pip install --python .venv/bin/python -e '.[dev,s3]'
+      - run: uv pip install --python .venv/bin/python --upgrade pip
       - run: .venv/bin/python scripts/audit_public_tree.py --repo .
       - run: .venv/bin/python -m build
       - run: python -m venv /tmp/agent-backup-wheel
@@ -72,4 +73,3 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - uses: actions/dependency-review-action@v4
-
