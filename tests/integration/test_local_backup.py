@@ -41,4 +41,4 @@ def test_synthetic_local_backup_flow(monkeypatch: object, tmp_path: Path) -> Non
 
     assert receipt.outcome == "success"
     assert status is not None
-    assert status["backup_id"] == receipt.backup_id
+    assert status.backup_id == receipt.backup_id

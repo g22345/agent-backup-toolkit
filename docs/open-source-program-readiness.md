@@ -37,6 +37,20 @@ Leave fields blank until a public source exists. Never estimate or manufacture t
 | Package downloads |  |  |  |
 | Releases |  |  |  |
 
+## Local verification evidence
+
+These checks are local engineering evidence, not public adoption evidence:
+
+| Check | Result | Date |
+| --- | --- | --- |
+| Unit/integration/public-tree tests | 67 passed | 2026-07-17 |
+| Ruff formatting/lint and strict mypy | Passed | 2026-07-17 |
+| Source distribution, wheel build, clean Python 3.12 install, CLI/preset smoke | Passed | 2026-07-17 |
+| Real `age` v1.3.1 synthetic backup/verify/preview/apply drill | Passed | 2026-07-17 |
+| `pip-audit` after upgrading the test dependency floor | No known vulnerabilities | 2026-07-17 |
+| Public-tree plus complete Git-history marker scan | Passed | 2026-07-17 |
+| Gitleaks full Git-history scan | No leaks found | 2026-07-17 |
+
 ## Honest pre-application gate
 
 - public repository reviewed for private paths, history, credentials, and foreign provenance;
@@ -46,4 +60,3 @@ Leave fields blank until a public source exists. Never estimate or manufacture t
 - genuine external tester feedback or adoption evidence, if obtained;
 - application answers shown to the maintainer and verified against live public evidence;
 - no claim of selection probability, security audit, production reliability, or adoption without proof.
-

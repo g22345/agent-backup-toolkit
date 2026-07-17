@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 import re
+import stat
 from pathlib import Path
 from typing import Annotated, Literal, TypeAlias
 from urllib.parse import urlsplit
@@ -248,11 +249,33 @@ def load_config(path: Path) -> ToolkitConfig:
     """Load a YAML configuration without reflecting its contents in failures."""
 
     try:
-        raw_text = path.read_text(encoding="utf-8")
+        before = path.lstat()
     except FileNotFoundError as exc:
         raise ConfigError("Configuration file not found. Run 'agent-backup init' first.") from exc
     except OSError as exc:
         raise ConfigError("Configuration file could not be read safely.") from exc
+    if stat.S_ISLNK(before.st_mode) or not stat.S_ISREG(before.st_mode):
+        raise ConfigError("Configuration must be a regular, non-symlink file.")
+    if os.name != "nt" and stat.S_IMODE(before.st_mode) & (stat.S_IWGRP | stat.S_IWOTH):
+        raise ConfigError("Configuration permissions allow unsafe group/world writes.")
+    flags = os.O_RDONLY | getattr(os, "O_CLOEXEC", 0) | getattr(os, "O_NOFOLLOW", 0)
+    descriptor: int | None = None
+    try:
+        descriptor = os.open(path, flags)
+        after = os.fstat(descriptor)
+        if before.st_dev != after.st_dev or before.st_ino != after.st_ino:
+            raise ConfigError("Configuration changed while it was being opened.")
+        with os.fdopen(descriptor, "r", encoding="utf-8") as handle:
+            descriptor = None
+            raw_text = handle.read()
+    except (OSError, UnicodeError) as exc:
+        raise ConfigError("Configuration file could not be read safely.") from exc
+    finally:
+        if descriptor is not None:
+            try:
+                os.close(descriptor)
+            except OSError:
+                pass
 
     try:
         data = yaml.safe_load(raw_text)

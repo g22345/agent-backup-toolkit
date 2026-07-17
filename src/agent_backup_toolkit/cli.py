@@ -3,9 +3,7 @@
 from __future__ import annotations
 
 import importlib.util
-import os
 import shutil
-import stat
 from pathlib import Path
 from typing import Annotated, NoReturn
 
@@ -56,16 +54,6 @@ def _fail(error: ToolkitError) -> NoReturn:
     raise typer.Exit(code=int(error.exit_code))
 
 
-def _config_permissions_are_safe(path: Path) -> bool:
-    if os.name == "nt":
-        return True
-    try:
-        mode = stat.S_IMODE(path.stat().st_mode)
-    except OSError:
-        return False
-    return not bool(mode & (stat.S_IWGRP | stat.S_IWOTH))
-
-
 @app.command("init")
 def init_command(
     config: Annotated[
@@ -80,7 +68,7 @@ def init_command(
         write_starter_config(target)
     except ToolkitError as exc:
         _fail(exc)
-    typer.echo(f"Created configuration: {target}")
+    typer.echo("Created configuration.")
     typer.echo("Next: add your public age recipient, then run 'agent-backup doctor'.")
 
 
@@ -96,8 +84,6 @@ def doctor(
     target = (config or default_config_path()).expanduser()
     try:
         parsed = load_config(target)
-        if not _config_permissions_are_safe(target):
-            raise ConfigError("Configuration permissions allow unsafe group/world writes.")
         if shutil.which("age") is None:
             raise ConfigError("Required dependency 'age' was not found on PATH.")
         if isinstance(parsed.destination, GitHubDestination) and shutil.which("gh") is None:
@@ -131,10 +117,8 @@ def status(
     if receipt is None:
         typer.echo("No fully verified backup has been recorded.")
         return
-    backup_id = receipt.get("backup_id", "unknown")
-    completed_at = receipt.get("completed_at", "unknown")
-    typer.echo(f"Latest verified backup: {backup_id}")
-    typer.echo(f"Completed: {completed_at}")
+    typer.echo(f"Latest verified backup: {receipt.backup_id}")
+    typer.echo(f"Completed: {receipt.completed_at.isoformat()}")
 
 
 @app.command()
@@ -214,7 +198,7 @@ def restore(
     if result.applied:
         typer.echo("Restore applied. No target files were deleted.")
         if result.rollback_path is not None:
-            typer.echo(f"Encrypted rollback: {result.rollback_path}")
+            typer.echo("Encrypted rollback created in the configured state directory.")
     else:
         typer.echo("Preview only; no target files were written.")
 

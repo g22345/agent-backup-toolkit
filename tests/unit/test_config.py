@@ -93,3 +93,22 @@ def test_starter_config_is_private_and_never_overwritten(tmp_path: Path) -> None
     with pytest.raises(ConfigError, match="refusing to overwrite"):
         write_starter_config(path)
     assert path.read_text(encoding="utf-8") == original
+
+
+def test_config_symlink_is_rejected(tmp_path: Path) -> None:
+    target = tmp_path / "target.yaml"
+    target.write_text("schema_version: 1\n", encoding="utf-8")
+    link = tmp_path / "config.yaml"
+    link.symlink_to(target)
+
+    with pytest.raises(ConfigError, match="non-symlink"):
+        load_config(link)
+
+
+def test_group_writable_config_is_rejected(tmp_path: Path) -> None:
+    path = tmp_path / "config.yaml"
+    path.write_text("schema_version: 1\n", encoding="utf-8")
+    path.chmod(0o620)
+
+    with pytest.raises(ConfigError, match="unsafe group/world writes"):
+        load_config(path)

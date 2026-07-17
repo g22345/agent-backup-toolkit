@@ -199,6 +199,11 @@ def _create_verified_rollback(
         raise RestoreError("Rollback archive creation failed.") from exc
     rollback_dir = config.state_dir / "rollbacks"
     try:
+        if config.state_dir.is_symlink():
+            raise RestoreError("Encrypted rollback state directory is unsafe.")
+        config.state_dir.mkdir(mode=0o700, parents=True, exist_ok=True)
+        if config.state_dir.is_symlink() or not config.state_dir.is_dir():
+            raise RestoreError("Encrypted rollback state directory is unsafe.")
         rollback_dir.mkdir(mode=0o700, parents=True, exist_ok=True)
     except OSError as exc:
         raise RestoreError("Encrypted rollback directory could not be created.") from exc

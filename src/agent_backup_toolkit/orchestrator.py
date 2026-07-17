@@ -64,6 +64,11 @@ def destination_from_config(config: ToolkitConfig) -> DestinationAdapter:
 def _write_state_receipt(state_dir: Path, filename: str, content: bytes) -> None:
     receipts = state_dir / "receipts"
     try:
+        if state_dir.is_symlink():
+            raise DestinationError("Local receipt state is not a safe directory.")
+        state_dir.mkdir(mode=0o700, parents=True, exist_ok=True)
+        if state_dir.is_symlink() or not state_dir.is_dir():
+            raise DestinationError("Local receipt state is not a safe directory.")
         receipts.mkdir(mode=0o700, parents=True, exist_ok=True)
         if receipts.is_symlink() or not receipts.is_dir():
             raise DestinationError("Local receipt state is not a safe directory.")
