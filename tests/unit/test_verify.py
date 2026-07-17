@@ -118,7 +118,7 @@ def test_manifest_tamper_is_rejected_even_with_updated_artifact_digest(
             assert source_file is not None
             content = source_file.read()
             if member.name == "manifest.json":
-                content = content.replace(b'"tool_version":"0.1.0a0"', b'"tool_version":"0.1.0a1"')
+                content = content.replace(b'"tool_version":"0.1.0a1"', b'"tool_version":"0.1.0a2"')
             replacement = tarfile.TarInfo(member.name)
             replacement.size = len(content)
             replacement.mode = member.mode
